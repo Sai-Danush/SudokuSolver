@@ -1,0 +1,256 @@
+/* ===== Newspaper Theme ===== */
+body.newspaper-theme {
+    --bg-primary: #F5F2E8;
+    --bg-secondary: #FAF8F1;
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --accent-primary: #2F4858;
+    --accent-coral: #B8584D;
+    --border-light: #D4D0C4;
+    --border-medium: #8B8680;
+    --border-dark: #1A1A1A;
+    
+    background-color: var(--bg-primary);
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.03) 2px,
+            rgba(0, 0, 0, 0.03) 4px
+        );
+}
+
+/* Newspaper Typography */
+.newspaper-theme .app-title {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.newspaper-theme .app-subtitle {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    letter-spacing: 0.5px;
+}
+
+/* Newspaper Grid Style */
+.newspaper-theme .sudoku-container {
+    background: var(--bg-secondary);
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        inset 0 0 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.newspaper-theme .sudoku-container::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(0, 0, 0, 0.02) 10px,
+            rgba(0, 0, 0, 0.02) 20px
+        );
+    z-index: -1;
+    border-radius: 16px;
+}
+
+.newspaper-theme .sudoku-grid {
+    border: 4px solid var(--border-dark);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.newspaper-theme .sudoku-cell {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 400;
+    border-color: var(--border-light);
+    background: var(--bg-secondary);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.newspaper-theme .sudoku-cell:nth-child(3n) {
+    border-right: 3px solid var(--border-dark);
+}
+
+.newspaper-theme .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+.newspaper-theme .sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 3px solid var(--border-dark);
+}
+
+.newspaper-theme .sudoku-cell.given {
+    font-weight: 700;
+    background: 
+        var(--bg-secondary),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 1px,
+            rgba(0, 0, 0, 0.03) 1px,
+            rgba(0, 0, 0, 0.03) 2px
+        );
+}
+
+/* Newspaper Buttons */
+.newspaper-theme .btn {
+    font-family: 'Georgia', serif;
+    border: 2px solid var(--border-dark);
+    box-shadow: 2px 2px 0 var(--border-dark);
+    transition: all 0.1s ease;
+}
+
+.newspaper-theme .btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--border-dark);
+}
+
+.newspaper-theme .btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--border-dark);
+}
+
+.newspaper-theme .btn-primary {
+    background: var(--accent-primary);
+    color: var(--bg-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+/* Newspaper Number Pad */
+.newspaper-theme .num-btn {
+    font-family: 'Georgia', serif;
+    font-weight: 700;
+    border: 2px solid var(--border-dark);
+    box-shadow: 2px 2px 0 var(--border-dark);
+    background: var(--bg-secondary);
+}
+
+.newspaper-theme .num-btn:hover {
+    background: var(--accent-primary);
+    color: var(--bg-secondary);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--border-dark);
+}
+
+/* Newspaper Hint Display */
+.newspaper-theme .hint-content {
+    background: var(--bg-secondary);
+    border: 3px solid var(--border-dark);
+    box-shadow: 5px 5px 0 var(--border-dark);
+}
+
+.newspaper-theme .hint-text {
+    font-family: 'Georgia', serif;
+    line-height: 1.8;
+}
+
+.newspaper-theme .hint-level-btn {
+    font-family: 'Georgia', serif;
+    border: 2px solid var(--border-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* ===== Dark Theme (Future Enhancement) ===== */
+body.dark-theme {
+    --bg-primary: #0F0F0F;
+    --bg-secondary: #1A1A1A;
+    --text-primary: #E0E0E0;
+    --text-secondary: #A0A0A0;
+    --accent-primary: #4ECDC4;
+    --accent-coral: #FF6B6B;
+    --accent-success: #45B7A8;
+    --accent-error: #F66D72;
+    --border-light: #2A2A2A;
+    --border-medium: #404040;
+    --border-dark: #606060;
+}
+
+.dark-theme .sudoku-container {
+    background: var(--bg-secondary);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .sudoku-cell {
+    background: var(--bg-secondary);
+}
+
+.dark-theme .sudoku-cell:hover:not(.given) {
+    background: #252525;
+}
+
+.dark-theme .sudoku-cell.given {
+    background: #0A0A0A;
+    color: var(--accent-primary);
+}
+
+.dark-theme .sudoku-cell.selected {
+    background: #1F3A3A !important;
+}
+
+.dark-theme .btn {
+    background: var(--bg-secondary);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+}
+
+.dark-theme .num-btn {
+    background: var(--bg-secondary);
+    border-color: var(--border-medium);
+    color: var(--text-primary);
+}
+
+.dark-theme .num-btn:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border-color: var(--accent-primary);
+}
+
+/* ===== Theme Transitions ===== */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sudoku-container,
+.sudoku-cell,
+.btn,
+.num-btn,
+.hint-content {
+    transition: all 0.3s ease;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+    body {
+        background: white;
+    }
+    
+    .controls-bar,
+    .number-pad,
+    .hint-display {
+        display: none;
+    }
+    
+    .sudoku-container {
+        box-shadow: none;
+        border: 2px solid black;
+    }
+    
+    .sudoku-grid {
+        border: 3px solid black;
+    }
+    
+    .sudoku-cell {
+        border: 1px solid black;
+    }
+}
