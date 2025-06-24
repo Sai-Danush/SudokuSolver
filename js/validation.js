@@ -73,6 +73,32 @@ const Validation = {
         return conflicts;
     },
     
+    // Update conflict states for all cells in the grid
+    updateAllConflictStates(grid) {
+        // First, clear all conflict states
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                grid.cells[row][col].hasConflict = false;
+            }
+        }
+        
+        // Then check each cell for conflicts
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (grid.cells[row][col].value !== 0) {
+                    const conflicts = this.checkConflicts(grid, row, col);
+                    if (conflicts.length > 0) {
+                        // Mark this cell and all conflicting cells
+                        grid.cells[row][col].hasConflict = true;
+                        conflicts.forEach(conflict => {
+                            grid.cells[conflict.row][conflict.col].hasConflict = true;
+                        });
+                    }
+                }
+            }
+        }
+    },
+    
     // Check if the entire puzzle is complete and valid
     isPuzzleComplete(grid) {
         // First check if all cells are filled
@@ -84,7 +110,7 @@ const Validation = {
             }
         }
         
-        // Then check if the solution is valid
+        // Then check if the solution is valid (no conflicts)
         return this.isPuzzleValid(grid);
     },
     

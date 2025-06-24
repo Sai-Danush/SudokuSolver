@@ -4,7 +4,7 @@
 const App = {
     currentGrid: null,
     selectedCell: null,
-    history: [],
+    history: [],        // Will store actions, not full grid states
     historyIndex: -1,
     isPencilMode: false,
     currentTheme: 'default',
@@ -119,6 +119,10 @@ function initializeGame() {
     // Create empty grid structure
     App.currentGrid = Grid.createEmptyGrid();
     
+    // Reset history
+    App.history = [];
+    App.historyIndex = -1;
+    
     // For now, let's load a sample puzzle (Phase 1 - manual input)
     // In Phase 2, this will be replaced with photo upload
     const samplePuzzle = [
@@ -136,8 +140,7 @@ function initializeGame() {
     Grid.loadPuzzle(App.currentGrid, samplePuzzle);
     Grid.render(App.currentGrid);
     
-    // Initialize history
-    saveToHistory();
+    updateHistoryButtons();
 }
 
 // Event Handlers
@@ -229,22 +232,51 @@ function placeNumber(number) {
         return;
     }
     
-    // Save to history before making changes
-    saveToHistory();
-    
     if (App.isPencilMode) {
-        // Toggle pencil mark
+        // Record the pencil mark action
+        const action = {
+            type: 'pencil',
+            row: row,
+            col: col,
+            number: number,
+            added: !cell.pencilMarks.has(number) // true if adding, false if removing
+        };
+        
+        // Apply the action
         Grid.togglePencilMark(App.currentGrid, row, col, number);
+        
+        // Save the action to history
+        saveAction(action);
     } else {
+        // Record the current state before change
+        const action = {
+            type: 'value',
+            row: row,
+            col: col,
+            oldValue: cell.value,
+            newValue: number,
+            oldPencilMarks: new Set(cell.pencilMarks) // Copy current pencil marks
+        };
+        
+        // Don't save if value isn't changing
+        if (action.oldValue === action.newValue) {
+            return;
+        }
+        
         // Place the number
         Grid.placeNumber(App.currentGrid, row, col, number);
         
-        // Check for conflicts
-        const conflicts = Validation.checkConflicts(App.currentGrid, row, col);
-        if (conflicts.length > 0) {
-            // Mark conflicts
-            Grid.markConflicts(conflicts);
+        // Update all conflict states in the grid
+        Validation.updateAllConflictStates(App.currentGrid);
+        
+        // Get all cells with conflicts for visual marking
+        const allConflicts = Validation.findAllConflicts(App.currentGrid);
+        if (allConflicts.length > 0) {
+            Grid.markConflicts(allConflicts);
         }
+        
+        // Save the action to history
+        saveAction(action);
         
         // Check if puzzle is complete
         if (Validation.isPuzzleComplete(App.currentGrid)) {
@@ -269,27 +301,162 @@ function handleErase() {
         return;
     }
     
-    saveToHistory();
+    // Only erase if there's something to erase
+    if (cell.value === 0 && cell.pencilMarks.size === 0) {
+        return;
+    }
+    
+    // Record the erase action
+    const action = {
+        type: 'erase',
+        row: row,
+        col: col,
+        oldValue: cell.value,
+        oldPencilMarks: new Set(cell.pencilMarks)
+    };
+    
     Grid.clearCell(App.currentGrid, row, col);
+    
+    // Update conflict states after erasing
+    Validation.updateAllConflictStates(App.currentGrid);
+    
+    // Save the action
+    saveAction(action);
+    
+    // Re-render to update conflict displays
     Grid.render(App.currentGrid);
 }
 
-function handleUndo() {
-    if (App.historyIndex > 0) {
+// New action-based history management
+function saveAction(action) {
+    // Remove any actions after current index (for redo functionality)
+    App.history = App.history.slice(0, App.historyIndex + 1);
+    
+    // Add the new action
+    App.history.push(action);
+    App.historyIndex++;
+    
+    // Limit history size
+    if (App.history.length > 100) {
+        App.history.shift();
         App.historyIndex--;
-        App.currentGrid = Utils.deepClone(App.history[App.historyIndex]);
-        Grid.render(App.currentGrid);
-        updateHistoryButtons();
+    }
+    
+    updateHistoryButtons();
+    
+    // Save current grid state to localStorage
+    Storage.saveGame(App.currentGrid);
+}
+
+function handleUndo() {
+    if (App.historyIndex < 0) return;
+    
+    // Get the action to undo
+    const action = App.history[App.historyIndex];
+    
+    // Undo the action
+    undoAction(action);
+    
+    // Move history pointer back
+    App.historyIndex--;
+    
+    // Update conflict states
+    Validation.updateAllConflictStates(App.currentGrid);
+    
+    // Re-render
+    Grid.render(App.currentGrid);
+    updateHistoryButtons();
+    
+    // Clear selection to avoid confusion
+    if (App.selectedCell) {
+        App.selectedCell = null;
+        Grid.clearHighlights();
     }
 }
 
 function handleRedo() {
-    if (App.historyIndex < App.history.length - 1) {
-        App.historyIndex++;
-        App.currentGrid = Utils.deepClone(App.history[App.historyIndex]);
-        Grid.render(App.currentGrid);
-        updateHistoryButtons();
+    if (App.historyIndex >= App.history.length - 1) return;
+    
+    // Move history pointer forward
+    App.historyIndex++;
+    
+    // Get the action to redo
+    const action = App.history[App.historyIndex];
+    
+    // Redo the action
+    redoAction(action);
+    
+    // Update conflict states
+    Validation.updateAllConflictStates(App.currentGrid);
+    
+    // Re-render
+    Grid.render(App.currentGrid);
+    updateHistoryButtons();
+    
+    // Clear selection to avoid confusion
+    if (App.selectedCell) {
+        App.selectedCell = null;
+        Grid.clearHighlights();
     }
+}
+
+// Undo a specific action
+function undoAction(action) {
+    const cell = App.currentGrid.cells[action.row][action.col];
+    
+    switch (action.type) {
+        case 'value':
+            // Restore old value and pencil marks
+            cell.value = action.oldValue;
+            cell.pencilMarks = new Set(action.oldPencilMarks);
+            break;
+            
+        case 'pencil':
+            // Toggle the pencil mark back
+            if (action.added) {
+                cell.pencilMarks.delete(action.number);
+            } else {
+                cell.pencilMarks.add(action.number);
+            }
+            break;
+            
+        case 'erase':
+            // Restore erased value and pencil marks
+            cell.value = action.oldValue;
+            cell.pencilMarks = new Set(action.oldPencilMarks);
+            break;
+    }
+}
+
+// Redo a specific action
+function redoAction(action) {
+    const cell = App.currentGrid.cells[action.row][action.col];
+    
+    switch (action.type) {
+        case 'value':
+            // Apply the new value
+            Grid.placeNumber(App.currentGrid, action.row, action.col, action.newValue);
+            break;
+            
+        case 'pencil':
+            // Toggle the pencil mark
+            if (action.added) {
+                cell.pencilMarks.add(action.number);
+            } else {
+                cell.pencilMarks.delete(action.number);
+            }
+            break;
+            
+        case 'erase':
+            // Clear the cell
+            Grid.clearCell(App.currentGrid, action.row, action.col);
+            break;
+    }
+}
+
+function updateHistoryButtons() {
+    App.elements.undoBtn.disabled = App.historyIndex < 0;
+    App.elements.redoBtn.disabled = App.historyIndex >= App.history.length - 1;
 }
 
 function handleHintRequest() {
@@ -388,45 +555,32 @@ function handlePuzzleComplete() {
     }, 1000);
 }
 
-// History management
-function saveToHistory() {
-    // Remove any states after current index
-    App.history = App.history.slice(0, App.historyIndex + 1);
-    
-    // Add current state
-    App.history.push(Utils.deepClone(App.currentGrid));
-    App.historyIndex++;
-    
-    // Limit history size
-    if (App.history.length > 50) {
-        App.history.shift();
-        App.historyIndex--;
-    }
-    
-    updateHistoryButtons();
-    
-    // Save to local storage
-    Storage.saveGame(App.currentGrid);
-}
-
-function updateHistoryButtons() {
-    App.elements.undoBtn.disabled = App.historyIndex <= 0;
-    App.elements.redoBtn.disabled = App.historyIndex >= App.history.length - 1;
-}
-
 // Load saved game from storage
 function loadSavedGame() {
     const savedData = Storage.loadGame();
     if (savedData) {
         App.currentGrid = savedData.grid;
+        
+        // Clear history when loading saved game
+        App.history = [];
+        App.historyIndex = -1;
+        
         Grid.render(App.currentGrid);
+        updateHistoryButtons();
     }
     
     // Load theme preference
     const savedTheme = Storage.loadThemePreference();
     if (savedTheme !== 'default') {
         App.currentTheme = savedTheme;
-        handleThemeChange({ currentTarget: { dataset: { theme: savedTheme } } });
+        // Create a fake event object for handleThemeChange
+        const fakeEvent = { 
+            currentTarget: { 
+                dataset: { theme: savedTheme } 
+            },
+            stopPropagation: () => {} // Add this to prevent errors
+        };
+        handleThemeChange(fakeEvent);
     }
     
     // Update active theme button

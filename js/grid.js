@@ -78,6 +78,7 @@ const Grid = {
             cellDiv.classList.add('user-input');
         }
         
+        // Add error class if cell has conflict
         if (cell.hasConflict) {
             cellDiv.classList.add('error');
         }
@@ -160,7 +161,7 @@ const Grid = {
         const cell = grid.cells[row][col];
         cell.value = 0;
         cell.pencilMarks.clear();
-        cell.hasConflict = false;
+        cell.hasConflict = false; // Clear conflict state when clearing cell
     },
     
     // Clear pencil marks in related cells when a number is placed
@@ -226,17 +227,27 @@ const Grid = {
     
     // Mark cells with conflicts
     markConflicts(conflicts) {
-        // Clear previous conflict marks
-        const cells = document.querySelectorAll('.sudoku-cell');
-        cells.forEach(cell => cell.classList.remove('error'));
+        // Clear previous conflict marks from DOM only (not from grid state)
+        const cells = document.querySelectorAll('.sudoku-cell.error');
+        cells.forEach(cell => {
+            // Only remove error class if the cell's grid state doesn't have a conflict
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            if (!App.currentGrid.cells[row][col].hasConflict) {
+                cell.classList.remove('error');
+            }
+        });
         
-        // Mark conflicting cells
+        // Mark conflicting cells in DOM
         conflicts.forEach(({ row, col }) => {
             const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
             if (cell) {
                 cell.classList.add('error');
-                cell.classList.add('error-shake');
-                setTimeout(() => cell.classList.remove('error-shake'), 500);
+                // Only add shake animation if not already in error state
+                if (!cell.classList.contains('error-shake')) {
+                    cell.classList.add('error-shake');
+                    setTimeout(() => cell.classList.remove('error-shake'), 500);
+                }
             }
         });
     },
