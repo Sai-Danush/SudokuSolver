@@ -448,16 +448,18 @@ body {
 
 /* ===== Hint Panel (Non-blocking) ===== */
 .hint-panel {
+    position: absolute;
+    left: 150px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 320px;
+    min-height: 300px;
     background: var(--bg-secondary);
     border-radius: 12px;
     box-shadow: var(--shadow-lg);
-    width: 320px;
-    min-height: 300px;
     transition: all 0.3s ease;
-    order: -1; /* Place before sudoku grid */
-    margin-right: var(--spacing-lg); /* Add space between hint panel and grid */
-    align-self: center; /* Center vertically with the grid */
-}
+  }
 
 .hint-panel.hidden {
     display: none;
@@ -549,8 +551,8 @@ body {
 /* ===== Responsive Design ===== */
 @media (max-width: 1200px) {
     .game-area {
-        flex-wrap: wrap;
-    }
+        position: relative;
+      }
     
     .hint-panel {
         order: 0; /* Reset order */
