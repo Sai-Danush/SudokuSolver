@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the grid
     initializeGame();
     
+    // Initialize mascot
+    Mascot.init();
+    
     // Load saved game if exists
     loadSavedGame();
     
@@ -59,12 +62,10 @@ function cacheElements() {
         numberBtns: document.querySelectorAll('.num-btn'),
         pencilMode: document.getElementById('pencilMode'),
         
-        // Hint panel (updated from modal)
+        // Hint panel (updated - removed collapsed elements)
         hintPanel: document.getElementById('hintPanel'),
         hintClose: document.getElementById('hintClose'),
-        hintCollapse: document.getElementById('hintCollapse'),
         hintText: document.getElementById('hintText'),
-        hintCollapsedText: document.getElementById('hintCollapsedText'),
         hintLevelBtns: document.querySelectorAll('.hint-level-btn')
     };
 }
@@ -101,7 +102,6 @@ function setupEventListeners() {
     
     // Hint panel
     App.elements.hintClose.addEventListener('click', closeHintPanel);
-    App.elements.hintCollapse.addEventListener('click', toggleHintCollapse);
     App.elements.hintLevelBtns.forEach(btn => {
         btn.addEventListener('click', handleHintLevelChange);
     });
@@ -225,6 +225,10 @@ function placeNumber(number) {
         const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
         cellElement.classList.add('error-shake');
         setTimeout(() => cellElement.classList.remove('error-shake'), 500);
+        
+        // Mascot reaction for error
+        Mascot.onError();
+        
         return;
     }
     
@@ -262,6 +266,9 @@ function placeNumber(number) {
         // Place the number
         Grid.placeNumber(App.currentGrid, row, col, number);
         
+        // Mascot reaction for correct move
+        Mascot.onCorrectMove();
+        
         // Update all conflict states in the grid
         Validation.updateAllConflictStates(App.currentGrid);
         
@@ -294,6 +301,10 @@ function handleErase() {
         const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
         cellElement.classList.add('error-shake');
         setTimeout(() => cellElement.classList.remove('error-shake'), 500);
+        
+        // Mascot reaction for error
+        Mascot.onError();
+        
         return;
     }
     
@@ -312,6 +323,9 @@ function handleErase() {
     };
     
     Grid.clearCell(App.currentGrid, row, col);
+    
+    // Track the move
+    Mascot.stats.movesMade++;
     
     // Update conflict states after erasing
     Validation.updateAllConflictStates(App.currentGrid);
@@ -456,17 +470,15 @@ function updateHistoryButtons() {
 }
 
 function handleHintRequest() {
+    // Add mascot reaction
+    Mascot.onHintRequest();
+    
     const hint = Hints.generateHint(App.currentGrid, App.hintLevel);
     
     if (!hint) {
         App.elements.hintText.textContent = "No hints available. The puzzle might be complete or unsolvable.";
-        App.elements.hintCollapsedText.textContent = "No hints available";
     } else {
         App.elements.hintText.textContent = hint.message;
-        // Create a shortened version for collapsed view
-        App.elements.hintCollapsedText.textContent = hint.message.length > 50 
-            ? hint.message.substring(0, 50) + '...' 
-            : hint.message;
         
         // Highlight relevant cells if provided
         if (hint.cells) {
@@ -476,12 +488,6 @@ function handleHintRequest() {
     
     // Show the hint panel with animation
     App.elements.hintPanel.classList.remove('hidden');
-    
-    // Load collapsed state from storage
-    const isCollapsed = localStorage.getItem('hintPanelCollapsed') === 'true';
-    if (isCollapsed) {
-        App.elements.hintPanel.classList.add('collapsed');
-    }
 }
 
 function handleHintLevelChange(e) {
@@ -497,33 +503,14 @@ function handleHintLevelChange(e) {
     
     if (!hint) {
         App.elements.hintText.textContent = "No hints available. The puzzle might be complete or unsolvable.";
-        App.elements.hintCollapsedText.textContent = "No hints available";
     } else {
         App.elements.hintText.textContent = hint.message;
-        // Update collapsed text too
-        App.elements.hintCollapsedText.textContent = hint.message.length > 50 
-            ? hint.message.substring(0, 50) + '...' 
-            : hint.message;
         
         // Update highlight for new hint
         Grid.clearHintHighlights();
         if (hint.cells) {
             Grid.highlightHintCells(hint.cells);
         }
-    }
-}
-
-function toggleHintCollapse(e) {
-    e.stopPropagation(); // Prevent event bubbling
-    
-    const isCollapsed = App.elements.hintPanel.classList.contains('collapsed');
-    
-    if (isCollapsed) {
-        App.elements.hintPanel.classList.remove('collapsed');
-        localStorage.setItem('hintPanelCollapsed', 'false');
-    } else {
-        App.elements.hintPanel.classList.add('collapsed');
-        localStorage.setItem('hintPanelCollapsed', 'true');
     }
 }
 
@@ -577,9 +564,16 @@ function handlePencilModeToggle(e) {
 
 function handleNewGame() {
     if (confirm('Start a new game? Current progress will be lost.')) {
+        // Reset mascot stats
+        Mascot.destroy();
+        Mascot.init();
+        
         initializeGame();
     }
 }
+
+// Make it globally accessible for victory modal
+window.handleNewGame = handleNewGame;
 
 function handlePuzzleComplete() {
     console.log('🎉 Puzzle completed!');
@@ -587,11 +581,8 @@ function handlePuzzleComplete() {
     // Add completion animation
     App.elements.gridContainer.classList.add('completed');
     
-    // Show victory message
-    setTimeout(() => {
-        alert('Congratulations! You solved the puzzle! 🎉');
-        // Could add fireworks or other celebration effects here
-    }, 1000);
+    // Trigger mascot celebration
+    Mascot.onPuzzleComplete();
 }
 
 // Load saved game from storage

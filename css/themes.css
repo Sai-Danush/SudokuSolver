@@ -148,10 +148,11 @@ body.newspaper-theme {
     box-shadow: 5px 5px 0 var(--border-dark);
 }
 
-.newspaper-theme .hint-text {
-    font-family: 'Georgia', serif;
-    line-height: 1.8;
+.newspaper-theme .hint-level-btn {
+    font-size: 0.6rem;
 }
+
+
 
 .newspaper-theme .hint-level-btn {
     font-family: 'Georgia', serif;

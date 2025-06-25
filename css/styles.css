@@ -286,8 +286,10 @@ body {
     display: flex;
     gap: var(--spacing-xl);
     align-items: flex-start;
-    flex-wrap: wrap;
     justify-content: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
 }
 
 /* ===== Sudoku Grid ===== */
@@ -392,7 +394,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
-    position: relative; /* Add this for hint panel positioning */
 }
 
 .number-pad-grid {
@@ -447,31 +448,19 @@ body {
 
 /* ===== Hint Panel (Non-blocking) ===== */
 .hint-panel {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
     background: var(--bg-secondary);
     border-radius: 12px;
-    box-shadow: var(--shadow-xl);
-    margin-top: var(--spacing-sm);
-    width: 100%;
+    box-shadow: var(--shadow-lg);
+    width: 320px;
+    min-height: 300px;
     transition: all 0.3s ease;
-    transform-origin: top center;
-    z-index: 10;
-    min-width: 220px; /* Ensure minimum width */
+    order: -1; /* Place before sudoku grid */
+    margin-right: var(--spacing-lg); /* Add space between hint panel and grid */
+    align-self: center; /* Center vertically with the grid */
 }
 
 .hint-panel.hidden {
-    transform: scaleY(0);
-    opacity: 0;
-    pointer-events: none;
-}
-
-.hint-panel:not(.hidden) {
-    transform: scaleY(1);
-    opacity: 1;
-    animation: slideDown 0.3s ease-out;
+    display: none;
 }
 
 .hint-panel-header {
@@ -482,7 +471,6 @@ body {
     border-bottom: 1px solid var(--border-light);
     background: var(--bg-primary);
     border-radius: 12px 12px 0 0;
-    cursor: pointer; /* Make header clickable */
 }
 
 .hint-title {
@@ -493,39 +481,6 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-}
-
-.hint-header-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-}
-
-.hint-collapse {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-secondary);
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.hint-collapse:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-.hint-collapse svg {
-    transition: transform 0.3s ease;
-}
-
-.hint-panel.collapsed .hint-collapse svg {
-    transform: rotate(180deg);
 }
 
 .hint-close {
@@ -550,44 +505,7 @@ body {
 
 .hint-panel-content {
     padding: var(--spacing-md);
-    max-height: 300px;
-    overflow-y: auto;
-    transition: all 0.3s ease;
-}
-
-.hint-panel.collapsed .hint-panel-content {
-    max-height: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-.hint-collapsed-content {
-    display: none;
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--bg-primary);
-    border-radius: 0 0 12px 12px;
-}
-
-.hint-panel.collapsed .hint-collapsed-content {
-    display: block;
-}
-
-.hint-collapsed-text {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.hint-panel.collapsed {
-    box-shadow: var(--shadow-md);
-}
-
-.hint-panel.collapsed .hint-panel-header {
-    border-bottom: none;
-    border-radius: 12px;
+    min-height: 200px;
 }
 
 .hint-level {
@@ -598,15 +516,15 @@ body {
 
 .hint-level-btn {
     flex: 1;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--border-light);
     background: var(--bg-secondary);
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.2s ease;
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: nowrap;
 }
 
 .hint-level-btn:hover {
@@ -621,26 +539,27 @@ body {
 }
 
 .hint-text {
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 1rem;
+    line-height: 1.6;
     color: var(--text-primary);
     margin: 0;
-    word-wrap: break-word; /* Ensure long text wraps */
-}
-
-/* Slide down animation for hint panel */
-@keyframes slideDown {
-    0% {
-        transform: translateY(-20px) scaleY(0.9);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0) scaleY(1);
-        opacity: 1;
-    }
+    word-wrap: break-word;
 }
 
 /* ===== Responsive Design ===== */
+@media (max-width: 1200px) {
+    .game-area {
+        flex-wrap: wrap;
+    }
+    
+    .hint-panel {
+        order: 0; /* Reset order */
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto var(--spacing-lg);
+    }
+}
+
 @media (max-width: 768px) {
     .app-title {
         font-size: 2rem;
