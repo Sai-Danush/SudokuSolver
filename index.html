@@ -117,21 +117,34 @@
                         <span class="mode-label">✏️ Pencil Mode</span>
                     </label>
                 </div>
+                
+                <!-- Hint Panel (Non-blocking) -->
+                <div id="hintPanel" class="hint-panel hidden">
+                    <div class="hint-panel-header">
+                        <h3 class="hint-title">💡 Hint</h3>
+                        <div class="hint-header-controls">
+                            <button class="hint-collapse" id="hintCollapse" title="Minimize">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <button class="hint-close" id="hintClose" title="Close">×</button>
+                        </div>
+                    </div>
+                    <div class="hint-panel-content">
+                        <div class="hint-level">
+                            <button class="hint-level-btn active" data-level="1">Gentle</button>
+                            <button class="hint-level-btn" data-level="2">Technique</button>
+                            <button class="hint-level-btn" data-level="3">Specific</button>
+                        </div>
+                        <p id="hintText" class="hint-text"></p>
+                    </div>
+                    <div class="hint-collapsed-content">
+                        <span class="hint-collapsed-text" id="hintCollapsedText"></span>
+                    </div>
+                </div>
             </div>
         </main>
-
-        <!-- Hint Display Area -->
-        <div id="hintDisplay" class="hint-display hidden">
-            <div class="hint-content">
-                <button class="hint-close" id="hintClose">&times;</button>
-                <div class="hint-level">
-                    <button class="hint-level-btn active" data-level="1">Gentle Nudge</button>
-                    <button class="hint-level-btn" data-level="2">Technique Hint</button>
-                    <button class="hint-level-btn" data-level="3">Show Solution</button>
-                </div>
-                <p id="hintText" class="hint-text"></p>
-            </div>
-        </div>
     </div>
 
     <!-- JavaScript Files -->

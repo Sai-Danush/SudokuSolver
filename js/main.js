@@ -59,10 +59,12 @@ function cacheElements() {
         numberBtns: document.querySelectorAll('.num-btn'),
         pencilMode: document.getElementById('pencilMode'),
         
-        // Hint display
-        hintDisplay: document.getElementById('hintDisplay'),
+        // Hint panel (updated from modal)
+        hintPanel: document.getElementById('hintPanel'),
         hintClose: document.getElementById('hintClose'),
+        hintCollapse: document.getElementById('hintCollapse'),
         hintText: document.getElementById('hintText'),
+        hintCollapsedText: document.getElementById('hintCollapsedText'),
         hintLevelBtns: document.querySelectorAll('.hint-level-btn')
     };
 }
@@ -97,21 +99,15 @@ function setupEventListeners() {
     // Pencil mode
     App.elements.pencilMode.addEventListener('change', handlePencilModeToggle);
     
-    // Hint modal
-    App.elements.hintClose.addEventListener('click', closeHintModal);
+    // Hint panel
+    App.elements.hintClose.addEventListener('click', closeHintPanel);
+    App.elements.hintCollapse.addEventListener('click', toggleHintCollapse);
     App.elements.hintLevelBtns.forEach(btn => {
         btn.addEventListener('click', handleHintLevelChange);
     });
     
     // Keyboard support
     document.addEventListener('keydown', handleKeyPress);
-    
-    // Click outside hint modal to close
-    App.elements.hintDisplay.addEventListener('click', (e) => {
-        if (e.target === App.elements.hintDisplay) {
-            closeHintModal();
-        }
-    });
 }
 
 // Initialize a new game
@@ -464,8 +460,13 @@ function handleHintRequest() {
     
     if (!hint) {
         App.elements.hintText.textContent = "No hints available. The puzzle might be complete or unsolvable.";
+        App.elements.hintCollapsedText.textContent = "No hints available";
     } else {
         App.elements.hintText.textContent = hint.message;
+        // Create a shortened version for collapsed view
+        App.elements.hintCollapsedText.textContent = hint.message.length > 50 
+            ? hint.message.substring(0, 50) + '...' 
+            : hint.message;
         
         // Highlight relevant cells if provided
         if (hint.cells) {
@@ -473,7 +474,14 @@ function handleHintRequest() {
         }
     }
     
-    App.elements.hintDisplay.classList.remove('hidden');
+    // Show the hint panel with animation
+    App.elements.hintPanel.classList.remove('hidden');
+    
+    // Load collapsed state from storage
+    const isCollapsed = localStorage.getItem('hintPanelCollapsed') === 'true';
+    if (isCollapsed) {
+        App.elements.hintPanel.classList.add('collapsed');
+    }
 }
 
 function handleHintLevelChange(e) {
@@ -485,11 +493,42 @@ function handleHintLevelChange(e) {
     App.hintLevel = parseInt(e.target.dataset.level);
     
     // Regenerate hint with new level
-    handleHintRequest();
+    const hint = Hints.generateHint(App.currentGrid, App.hintLevel);
+    
+    if (!hint) {
+        App.elements.hintText.textContent = "No hints available. The puzzle might be complete or unsolvable.";
+        App.elements.hintCollapsedText.textContent = "No hints available";
+    } else {
+        App.elements.hintText.textContent = hint.message;
+        // Update collapsed text too
+        App.elements.hintCollapsedText.textContent = hint.message.length > 50 
+            ? hint.message.substring(0, 50) + '...' 
+            : hint.message;
+        
+        // Update highlight for new hint
+        Grid.clearHintHighlights();
+        if (hint.cells) {
+            Grid.highlightHintCells(hint.cells);
+        }
+    }
 }
 
-function closeHintModal() {
-    App.elements.hintDisplay.classList.add('hidden');
+function toggleHintCollapse(e) {
+    e.stopPropagation(); // Prevent event bubbling
+    
+    const isCollapsed = App.elements.hintPanel.classList.contains('collapsed');
+    
+    if (isCollapsed) {
+        App.elements.hintPanel.classList.remove('collapsed');
+        localStorage.setItem('hintPanelCollapsed', 'false');
+    } else {
+        App.elements.hintPanel.classList.add('collapsed');
+        localStorage.setItem('hintPanelCollapsed', 'true');
+    }
+}
+
+function closeHintPanel() {
+    App.elements.hintPanel.classList.add('hidden');
     Grid.clearHintHighlights();
 }
 
