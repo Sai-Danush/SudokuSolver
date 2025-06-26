@@ -22,6 +22,32 @@
         <header class="app-header">
             <h1 class="app-title">Sudoku Solver</h1>
             <p class="app-subtitle">Smart hints without spoiling the fun</p>
+            
+            <!-- Puzzle Library Dropdown -->
+            <div class="puzzle-library-container">
+                <button class="puzzle-library-btn" id="puzzleLibraryBtn">
+                    <span>Puzzle Library</span>
+                    <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 12 12">
+                        <path d="M2 4L6 8L10 4" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                </button>
+                
+                <div class="puzzle-dropdown" id="puzzleDropdown">
+                    <div class="puzzle-dropdown-header">
+                        <h3>Select a Puzzle</h3>
+                        <div class="puzzle-filters">
+                            <button class="filter-btn active" data-difficulty="all">All</button>
+                            <button class="filter-btn" data-difficulty="easy">Easy</button>
+                            <button class="filter-btn" data-difficulty="medium">Medium</button>
+                            <button class="filter-btn" data-difficulty="hard">Hard</button>
+                            <button class="filter-btn" data-difficulty="expert">Expert</button>
+                        </div>
+                    </div>
+                    <div class="puzzle-list" id="puzzleList">
+                        <!-- Puzzles will be populated here by JavaScript -->
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- Controls Bar -->
@@ -168,6 +194,7 @@
     <script src="js/storage-utils.js"></script>
     <script src="js/grid.js"></script>
     <script src="js/mascot.js"></script>
+    <script src="js/puzzles.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

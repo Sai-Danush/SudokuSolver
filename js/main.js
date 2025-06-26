@@ -9,6 +9,7 @@ const App = {
     isPencilMode: false,
     currentTheme: 'default',
     hintLevel: 1,
+    currentPuzzleId: null,
     
     // Constants
     GRID_SIZE: 9,
@@ -66,7 +67,13 @@ function cacheElements() {
         hintPanel: document.getElementById('hintPanel'),
         hintClose: document.getElementById('hintClose'),
         hintText: document.getElementById('hintText'),
-        hintLevelBtns: document.querySelectorAll('.hint-level-btn')
+        hintLevelBtns: document.querySelectorAll('.hint-level-btn'),
+        
+        // Puzzle library
+        puzzleLibraryBtn: document.getElementById('puzzleLibraryBtn'),
+        puzzleDropdown: document.getElementById('puzzleDropdown'),
+        puzzleList: document.getElementById('puzzleList'),
+        filterBtns: document.querySelectorAll('.filter-btn')
     };
 }
 
@@ -108,35 +115,209 @@ function setupEventListeners() {
     
     // Keyboard support
     document.addEventListener('keydown', handleKeyPress);
+    
+    // Puzzle library
+    setupPuzzleLibraryListeners();
+}
+
+// Setup puzzle library event listeners
+function setupPuzzleLibraryListeners() {
+    // Toggle dropdown
+    App.elements.puzzleLibraryBtn.addEventListener('click', togglePuzzleDropdown);
+    
+    // Filter buttons
+    App.elements.filterBtns.forEach(btn => {
+        btn.addEventListener('click', handleFilterClick);
+    });
+    
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+        if (!App.elements.puzzleLibraryBtn.contains(e.target) && 
+            !App.elements.puzzleDropdown.contains(e.target)) {
+            closePuzzleDropdown();
+        }
+    });
+    
+    // Initialize puzzle list
+    renderPuzzleList('all');
 }
 
 // Initialize a new game
 function initializeGame() {
-    // Create empty grid structure
-    App.currentGrid = Grid.createEmptyGrid();
+    // Get a random puzzle from the database
+    const puzzle = PuzzleDatabase.getRandomPuzzle();
+    loadPuzzleIntoGame(puzzle);
+}
+
+// Toggle puzzle dropdown
+function togglePuzzleDropdown(e) {
+    e.stopPropagation();
+    const isOpen = App.elements.puzzleDropdown.classList.contains('show');
     
-    // Reset history
+    if (isOpen) {
+        closePuzzleDropdown();
+    } else {
+        openPuzzleDropdown();
+    }
+}
+
+// Open puzzle dropdown
+function openPuzzleDropdown() {
+    App.elements.puzzleDropdown.classList.add('show');
+    App.elements.puzzleLibraryBtn.classList.add('active');
+}
+
+// Close puzzle dropdown
+function closePuzzleDropdown() {
+    App.elements.puzzleDropdown.classList.remove('show');
+    App.elements.puzzleLibraryBtn.classList.remove('active');
+}
+
+// Handle filter button clicks
+function handleFilterClick(e) {
+    const difficulty = e.target.dataset.difficulty;
+    
+    // Update active state
+    App.elements.filterBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.difficulty === difficulty);
+    });
+    
+    // Render filtered list
+    renderPuzzleList(difficulty);
+}
+
+// Render puzzle list
+function renderPuzzleList(filter = 'all') {
+    const puzzles = filter === 'all' 
+        ? PuzzleDatabase.getAllPuzzles()
+        : PuzzleDatabase.getPuzzlesByDifficulty(filter);
+    
+    // Clear current list
+    App.elements.puzzleList.innerHTML = '';
+    
+    // Add puzzle items
+    puzzles.forEach(puzzle => {
+        const puzzleInfo = PuzzleDatabase.getPuzzleInfo(puzzle);
+        const item = createPuzzleItem(puzzleInfo);
+        App.elements.puzzleList.appendChild(item);
+    });
+}
+
+// Create puzzle item element
+function createPuzzleItem(puzzleInfo) {
+    const item = document.createElement('div');
+    item.className = 'puzzle-item';
+    if (puzzleInfo.completed) {
+        item.classList.add('completed');
+    }
+    
+    // Create HTML structure
+    item.innerHTML = `
+        <div class="puzzle-info">
+            <span class="puzzle-number">${puzzleInfo.displayName}</span>
+            <div class="puzzle-difficulty">
+                ${createStarRating(puzzleInfo.stars)}
+            </div>
+        </div>
+        <div class="puzzle-status">
+            ${puzzleInfo.completed ? `
+                <svg class="checkmark" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                </svg>
+                ${puzzleInfo.bestTime ? `<span class="best-time">${formatTime(puzzleInfo.bestTime)}</span>` : ''}
+            ` : ''}
+        </div>
+    `;
+    
+    // Add click handler
+    item.addEventListener('click', () => selectPuzzle(puzzleInfo.id));
+    
+    return item;
+}
+
+// Create star rating HTML
+function createStarRating(stars) {
+    let html = '';
+    for (let i = 0; i < 4; i++) {
+        if (i < stars) {
+            html += `<svg class="star" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>`;
+        } else {
+            html += `<svg class="star empty" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>`;
+        }
+    }
+    return html;
+}
+
+// Format time for display
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Select and load a puzzle
+function selectPuzzle(puzzleId) {
+    // Check if current game has progress
+    if (hasUnsavedProgress()) {
+        if (!confirm('You have an unfinished puzzle. Do you want to start a new one?')) {
+            return;
+        }
+    }
+    
+    // Load the selected puzzle
+    const puzzle = PuzzleDatabase.getPuzzleById(puzzleId);
+    if (puzzle) {
+        loadPuzzleIntoGame(puzzle);
+        closePuzzleDropdown();
+        
+        // Show mascot message
+        Mascot.showMessage(`Starting Puzzle #${puzzleId}!`);
+    }
+}
+
+// Load puzzle into the game
+function loadPuzzleIntoGame(puzzle) {
+    // Reset game state
+    App.currentGrid = Grid.createEmptyGrid();
     App.history = [];
     App.historyIndex = -1;
+    App.selectedCell = null;
     
-    // For now, let's load a sample puzzle (Phase 1 - manual input)
-    // In Phase 2, this will be replaced with photo upload
-    const samplePuzzle = [
-        [5,3,0,0,7,0,0,0,0],
-        [6,0,0,1,9,5,0,0,0],
-        [0,9,8,0,0,0,0,6,0],
-        [8,0,0,0,6,0,0,0,3],
-        [4,0,0,8,0,3,0,0,1],
-        [7,0,0,0,2,0,0,0,6],
-        [0,6,0,0,0,0,2,8,0],
-        [0,0,0,4,1,9,0,0,5],
-        [0,0,0,0,8,0,0,7,9]
-    ];
+    // Reset mascot stats
+    Mascot.stats.startTime = Date.now();
+    Mascot.stats.hintsUsed = 0;
+    Mascot.stats.movesMade = 0;
     
-    Grid.loadPuzzle(App.currentGrid, samplePuzzle);
+    // Load the puzzle
+    Grid.loadPuzzle(App.currentGrid, puzzle.board);
     Grid.render(App.currentGrid);
     
+    // Store current puzzle ID
+    App.currentPuzzleId = puzzle.id;
+    
+    // Update UI
     updateHistoryButtons();
+    Grid.clearHighlights();
+}
+
+// Check if there's unsaved progress
+function hasUnsavedProgress() {
+    // Check if any non-given cells have values
+    if (!App.currentGrid) return false;
+    
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const cell = App.currentGrid.cells[row][col];
+            if (!cell.isGiven && cell.value !== 0) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 // Event Handlers
@@ -563,13 +744,17 @@ function handlePencilModeToggle(e) {
 }
 
 function handleNewGame() {
-    if (confirm('Start a new game? Current progress will be lost.')) {
-        // Reset mascot stats
-        Mascot.destroy();
-        Mascot.init();
-        
-        initializeGame();
+    if (hasUnsavedProgress()) {
+        if (!confirm('Start a new game? Current progress will be lost.')) {
+            return;
+        }
     }
+    
+    // Get a random puzzle
+    const puzzle = PuzzleDatabase.getRandomPuzzle();
+    loadPuzzleIntoGame(puzzle);
+    
+    Mascot.showMessage('New puzzle loaded! Good luck!');
 }
 
 // Make it globally accessible for victory modal
@@ -577,6 +762,23 @@ window.handleNewGame = handleNewGame;
 
 function handlePuzzleComplete() {
     console.log('🎉 Puzzle completed!');
+    
+    // Calculate completion time
+    const completionTime = Math.floor((Date.now() - Mascot.stats.startTime) / 1000);
+    
+    // Save completion status if we have a puzzle ID
+    if (App.currentPuzzleId) {
+        const currentStatus = PuzzleDatabase.loadCompletionStatus()[App.currentPuzzleId] || {};
+        const newStatus = {
+            completed: true,
+            bestTime: currentStatus.bestTime 
+                ? Math.min(currentStatus.bestTime, completionTime) 
+                : completionTime,
+            lastCompleted: Date.now()
+        };
+        
+        PuzzleDatabase.saveCompletionStatus(App.currentPuzzleId, newStatus);
+    }
     
     // Add completion animation
     App.elements.gridContainer.classList.add('completed');

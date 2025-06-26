@@ -596,3 +596,202 @@ body {
         margin-top: var(--spacing-md);
     }
 }
+
+/* ===== Puzzle Library Dropdown ===== */
+.puzzle-library-container {
+    position: relative;
+    margin-top: var(--spacing-lg);
+}
+
+.puzzle-library-btn {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.puzzle-library-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-primary);
+}
+
+.dropdown-arrow {
+    transition: transform 0.3s ease;
+}
+
+.puzzle-library-btn.active .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.puzzle-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-light);
+    border-radius: 12px;
+    box-shadow: var(--shadow-xl);
+    width: 400px;
+    max-height: 500px;
+    display: none;
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.puzzle-dropdown.show {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.puzzle-dropdown-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-primary);
+}
+
+.puzzle-dropdown-header h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.puzzle-filters {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.filter-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.filter-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.filter-btn.active {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.puzzle-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+}
+
+.puzzle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.puzzle-item:hover {
+    transform: translateX(4px);
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.puzzle-item.completed {
+    background: #E8F5E9;
+    border-color: #81C784;
+}
+
+.puzzle-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.puzzle-number {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+    min-width: 80px;
+}
+
+.puzzle-difficulty {
+    display: flex;
+    gap: 2px;
+}
+
+.star {
+    width: 14px;
+    height: 14px;
+    fill: #FFB400;
+}
+
+.star.empty {
+    fill: #E0E0E0;
+}
+
+.puzzle-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    fill: #4CAF50;
+}
+
+.best-time {
+    font-weight: 500;
+    color: var(--accent-primary);
+}
+
+/* Scrollbar styling */
+.puzzle-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.puzzle-list::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 4px;
+}
+
+.puzzle-list::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+.puzzle-list::-webkit-scrollbar-thumb:hover {
+    background: var(--border-medium);
+}

@@ -25,7 +25,12 @@ const Mascot = {
             "Fantastic!",
             "Keep it up!",
             "You're on fire!",
-            "Smart thinking!"
+            "Smart thinking!",
+            "Good choice!",
+            "That's the way!",
+            "Nicely played!",
+            "You're getting it!",
+            "Solid move!"
         ],
         
         hint: [
@@ -34,7 +39,11 @@ const Mascot = {
             "Hmm, let's see...",
             "I've got an idea!",
             "Check this out!",
-            "Here's a tip!"
+            "Here's a tip!",
+            "Try looking here...",
+            "Consider this...",
+            "What about this?",
+            "Here's a suggestion!"
         ],
         
         error: [
@@ -42,15 +51,30 @@ const Mascot = {
             "Try again!",
             "Almost there!",
             "Give it another go!",
-            "So close!"
+            "So close!",
+            "Not that one!",
+            "Keep trying!",
+            "Don't give up!",
+            "You'll get it!",
+            "One more time!"
         ],
         
         completion: [
-            "You did it! Amazing!",
-            "Puzzle complete! Woof!",
-            "Victory! Time for treats!",
-            "You're a Sudoku master!",
-            "Incredible work!"
+            "You did it! Amazing job!",
+            "Puzzle complete! Well done!",
+            "Congratulations! That was impressive!",
+            "Excellent work! You solved it!",
+            "Great job! You're really good at this!",
+            "Victory! Nice solving skills!",
+            "You made it! That was a tough one!",
+            "Success! You're getting better!",
+            "Nicely done! Another puzzle conquered!",
+            "Fantastic! You figured it out!",
+            "Well played! That took skill!",
+            "Awesome! You cracked the code!",
+            "Perfect! You've mastered this one!",
+            "Brilliant solve! Keep it up!",
+            "You nailed it! Great thinking!"
         ],
         
         idle: [
@@ -58,7 +82,35 @@ const Mascot = {
             "I believe in you!",
             "You can do this!",
             "Think carefully!",
-            "No rush!"
+            "No rush!",
+            "Looking good so far!",
+            "Keep thinking!",
+            "You're doing fine!",
+            "Stay focused!",
+            "Almost there!",
+            "Nice progress!",
+            "Looking sharp!",
+            "Great concentration!",
+            "You've got this!",
+            "Steady progress!",
+            "Keep at it!",
+            "Good thinking!",
+            "Stay positive!",
+            "You're on track!",
+            "Doing well!"
+        ],
+        
+        encourage: [
+            "Don't worry, puzzles are tricky!",
+            "Every expert was once a beginner!",
+            "Mistakes help us learn!",
+            "You're improving with each move!",
+            "Rome wasn't built in a day!",
+            "Practice makes perfect!",
+            "You're doing better than you think!",
+            "Keep going, you're learning!",
+            "That's the spirit!",
+            "One step at a time!"
         ]
     },
     
@@ -74,6 +126,9 @@ const Mascot = {
         
         // Set up idle messages
         this.startIdleMessages();
+        
+        // Set up bouncing
+        this.startRandomBouncing();
     },
     
     // Show a message with animation
@@ -90,13 +145,20 @@ const Mascot = {
         this.speechBubble.classList.add('show');
         
         // Bounce the corgi
-        this.corgiElement.classList.add('bounce');
-        setTimeout(() => this.corgiElement.classList.remove('bounce'), 500);
+        this.bounce();
         
         // Hide after duration
         this.messageTimeout = setTimeout(() => {
             this.speechBubble.classList.remove('show');
         }, duration);
+    },
+    
+    // Make the corgi bounce
+    bounce() {
+        if (!this.corgiElement) return;
+        
+        this.corgiElement.classList.add('bounce');
+        setTimeout(() => this.corgiElement.classList.remove('bounce'), 500);
     },
     
     // React to correct move
@@ -117,6 +179,14 @@ const Mascot = {
     onError() {
         const message = this.getRandomMessage('error');
         this.showMessage(message, 2000);
+        
+        // Sometimes show encouragement after errors
+        if (Math.random() < 0.3) { // 30% chance
+            setTimeout(() => {
+                const encouragement = this.getRandomMessage('encourage');
+                this.showMessage(encouragement, 2500);
+            }, 2500);
+        }
     },
     
     // React to puzzle completion
@@ -205,21 +275,43 @@ const Mascot = {
         }
     },
     
-    // Start showing idle messages periodically
+    // Start showing idle messages periodically (MORE FREQUENT)
     startIdleMessages() {
         // Clear any existing interval
         if (this.idleInterval) {
             clearInterval(this.idleInterval);
         }
         
-        // Show an idle message every 30-60 seconds
+        // Show an idle message every 8-20 seconds (much more frequent)
         this.idleInterval = setInterval(() => {
             // Don't show idle messages if speech bubble is already visible
             if (!this.speechBubble.classList.contains('show')) {
                 const message = this.getRandomMessage('idle');
                 this.showMessage(message, 2500);
             }
-        }, 30000 + Math.random() * 30000);
+        }, 8000 + Math.random() * 12000);
+    },
+    
+    // Start random bouncing animation
+    startRandomBouncing() {
+        // Clear any existing interval
+        if (this.bounceInterval) {
+            clearInterval(this.bounceInterval);
+        }
+        
+        // Bounce randomly every 15-30 seconds
+        this.bounceInterval = setInterval(() => {
+            // Only bounce if not already showing a message
+            if (!this.speechBubble.classList.contains('show')) {
+                this.bounce();
+                
+                // 50% chance to also show a message when bouncing
+                if (Math.random() < 0.5) {
+                    const message = this.getRandomMessage('idle');
+                    this.showMessage(message, 2000);
+                }
+            }
+        }, 15000 + Math.random() * 15000);
     },
     
     // Get random message from category
@@ -235,6 +327,9 @@ const Mascot = {
         }
         if (this.idleInterval) {
             clearInterval(this.idleInterval);
+        }
+        if (this.bounceInterval) {
+            clearInterval(this.bounceInterval);
         }
     }
 };

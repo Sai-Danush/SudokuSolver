@@ -11,14 +11,25 @@ body.newspaper-theme {
     --border-dark: #1A1A1A;
     
     background-color: var(--bg-primary);
-    background-image: 
-        repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(0, 0, 0, 0.03) 2px,
-            rgba(0, 0, 0, 0.03) 4px
-        );
+    background-image: url('../assets/newspaper-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
+}
+
+/* Add a subtle overlay to ensure readability */
+body.newspaper-theme::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(245, 242, 232, 0.3); /* Reduced to 30% opacity for maximum vibrancy */
+    pointer-events: none;
+    z-index: -1;
 }
 
 /* Newspaper Typography */
