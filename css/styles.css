@@ -795,3 +795,14 @@ body {
 .puzzle-list::-webkit-scrollbar-thumb:hover {
     background: var(--border-medium);
 }
+
+@media (max-width: 768px) {
+    .puzzle-dropdown {
+        width: 90vw;
+        max-width: 360px;
+    }
+    
+    .puzzle-library-container {
+        margin-top: var(--spacing-md);
+    }
+}
