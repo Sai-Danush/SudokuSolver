@@ -77,6 +77,25 @@ const Mascot = {
             "You nailed it! Great thinking!"
         ],
         
+        // Victory modal specific messages
+        victoryModal: [
+            "Outstanding puzzle solving!",
+            "You're a Sudoku champion!",
+            "What incredible skills!",
+            "That was absolutely brilliant!",
+            "Masterful work there!",
+            "You've got serious talent!",
+            "Simply amazing performance!",
+            "Truly impressive solving!",
+            "You make it look easy!",
+            "Spectacular puzzle mastery!",
+            "Phenomenal brain power!",
+            "You're getting really good!",
+            "That was pure genius!",
+            "Incredible logical thinking!",
+            "You solved it like a pro!"
+        ],
+        
         idle: [
             "Take your time!",
             "I believe in you!",
@@ -118,6 +137,7 @@ const Mascot = {
     init() {
         this.corgiElement = document.getElementById('corgiMascot');
         this.speechBubble = document.getElementById('speechBubble');
+        this.victorySpeechBubble = document.getElementById('victorySpeechBubble');
         
         // Reset stats
         this.stats.startTime = Date.now();
@@ -150,6 +170,25 @@ const Mascot = {
         // Hide after duration
         this.messageTimeout = setTimeout(() => {
             this.speechBubble.classList.remove('show');
+        }, duration);
+    },
+    
+    // Show victory message in the modal
+    showVictoryMessage(message, duration = 4000) {
+        if (!this.victorySpeechBubble) return;
+        
+        // Clear any existing victory timeout
+        if (this.victoryMessageTimeout) {
+            clearTimeout(this.victoryMessageTimeout);
+        }
+        
+        // Set the victory message
+        this.victorySpeechBubble.textContent = message;
+        this.victorySpeechBubble.classList.add('show');
+        
+        // Hide after duration
+        this.victoryMessageTimeout = setTimeout(() => {
+            this.victorySpeechBubble.classList.remove('show');
         }, duration);
     },
     
@@ -192,10 +231,12 @@ const Mascot = {
     // React to puzzle completion
     onPuzzleComplete() {
         const message = this.getRandomMessage('completion');
-        this.showMessage(message, 5000);
+        this.showMessage(message, 3000);
         
-        // Show victory modal with stats
-        this.showVictoryModal();
+        // Show victory modal with stats after a short delay
+        setTimeout(() => {
+            this.showVictoryModal();
+        }, 1500);
         
         // Create confetti
         this.createConfetti();
@@ -221,13 +262,21 @@ const Mascot = {
         // Show modal
         modal.classList.add('show');
         
+        // Show victory message after modal appears
+        setTimeout(() => {
+            const victoryMessage = this.getRandomMessage('victoryModal');
+            this.showVictoryMessage(victoryMessage);
+        }, 500);
+        
         // Set up close handlers
         document.getElementById('closeVictoryBtn').onclick = () => {
             modal.classList.remove('show');
+            this.victorySpeechBubble.classList.remove('show');
         };
         
         document.getElementById('newGameVictoryBtn').onclick = () => {
             modal.classList.remove('show');
+            this.victorySpeechBubble.classList.remove('show');
             // Trigger new game through main.js
             if (window.handleNewGame) {
                 window.handleNewGame();
@@ -324,6 +373,9 @@ const Mascot = {
     destroy() {
         if (this.messageTimeout) {
             clearTimeout(this.messageTimeout);
+        }
+        if (this.victoryMessageTimeout) {
+            clearTimeout(this.victoryMessageTimeout);
         }
         if (this.idleInterval) {
             clearInterval(this.idleInterval);

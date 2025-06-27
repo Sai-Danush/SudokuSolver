@@ -131,6 +131,70 @@
     margin-bottom: var(--spacing-lg);
 }
 
+/* Victory Corgi Container */
+.victory-corgi-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: var(--spacing-lg) auto;
+}
+
+/* Victory Speech Bubble */
+.victory-speech-bubble {
+    position: absolute;
+    bottom: 130px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-success);
+    border-radius: 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent-success);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.9);
+    transition: all 0.4s ease;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 15;
+    min-width: 200px;
+    text-align: center;
+}
+
+.victory-speech-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.victory-speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--bg-secondary);
+}
+
+.victory-speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 9px solid var(--accent-success);
+}
+
 .victory-stats {
     margin: var(--spacing-lg) 0;
     font-size: 1.1rem;
@@ -176,7 +240,7 @@
 .victory-corgi {
     width: 120px;
     height: 120px;
-    margin: var(--spacing-lg) auto;
+    margin: 0 auto;
     image-rendering: pixelated;
     animation: victory-dance 1s ease infinite;
 }

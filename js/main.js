@@ -287,6 +287,9 @@ function loadPuzzleIntoGame(puzzle) {
     App.historyIndex = -1;
     App.selectedCell = null;
     
+    // Clear completion animations from previous puzzle
+    App.elements.gridContainer.classList.remove('completed');
+    
     // Reset mascot stats
     Mascot.stats.startTime = Date.now();
     Mascot.stats.hintsUsed = 0;
