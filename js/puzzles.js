@@ -547,5 +547,66 @@ const PuzzleDatabase = {
             bestTime: status.bestTime || null,
             displayName: `Puzzle #${puzzle.id}`
         };
+    },
+
+     // Save completed puzzle solution
+     saveCompletedSolution(puzzleId, grid) {
+        try {
+            const completedSolutions = this.loadCompletedSolutions();
+            
+            // Serialize the completed grid
+            const serializedGrid = Storage.serializeGrid(grid);
+            completedSolutions[puzzleId] = {
+                solution: serializedGrid,
+                timestamp: Date.now(),
+                version: '1.0'
+            };
+            
+            localStorage.setItem('sudoku_completed_solutions', JSON.stringify(completedSolutions));
+            return true;
+        } catch (error) {
+            console.error('Error saving completed solution:', error);
+            return false;
+        }
+    },
+    
+    // Load completed puzzle solutions
+    loadCompletedSolutions() {
+        try {
+            const saved = localStorage.getItem('sudoku_completed_solutions');
+            return saved ? JSON.parse(saved) : {};
+        } catch (error) {
+            console.error('Error loading completed solutions:', error);
+            return {};
+        }
+    },
+    
+    // Get completed solution for a specific puzzle
+    getCompletedSolution(puzzleId) {
+        try {
+            const completedSolutions = this.loadCompletedSolutions();
+            const solutionData = completedSolutions[puzzleId];
+            
+            if (solutionData && solutionData.solution) {
+                return Storage.deserializeGrid(solutionData.solution);
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting completed solution:', error);
+            return null;
+        }
+    },
+    
+    // Remove completed solution (when puzzle is reset)
+    removeCompletedSolution(puzzleId) {
+        try {
+            const completedSolutions = this.loadCompletedSolutions();
+            delete completedSolutions[puzzleId];
+            localStorage.setItem('sudoku_completed_solutions', JSON.stringify(completedSolutions));
+            return true;
+        } catch (error) {
+            console.error('Error removing completed solution:', error);
+            return false;
+        }
     }
 };

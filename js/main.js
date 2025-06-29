@@ -73,7 +73,18 @@ function cacheElements() {
         puzzleLibraryBtn: document.getElementById('puzzleLibraryBtn'),
         puzzleDropdown: document.getElementById('puzzleDropdown'),
         puzzleList: document.getElementById('puzzleList'),
-        filterBtns: document.querySelectorAll('.filter-btn')
+        filterBtns: document.querySelectorAll('.filter-btn'),
+        resetPuzzleBtn: document.getElementById('resetPuzzleBtn'),
+
+        // Progress bar
+        progressContainer: document.getElementById('progressContainer'),
+        progressFill: document.getElementById('progressFill'),
+        progressText: document.getElementById('progressText'),
+
+        // Status message
+        puzzleStatusMessage: document.getElementById('puzzleStatusMessage'),
+        statusText: document.getElementById('statusText'),
+        statusSubtext: document.getElementById('statusSubtext')
     };
 }
 
@@ -130,6 +141,9 @@ function setupPuzzleLibraryListeners() {
         btn.addEventListener('click', handleFilterClick);
     });
     
+    // Reset button
+    App.elements.resetPuzzleBtn.addEventListener('click', handleResetPuzzle);
+    
     // Click outside to close
     document.addEventListener('click', (e) => {
         if (!App.elements.puzzleLibraryBtn.contains(e.target) && 
@@ -140,6 +154,9 @@ function setupPuzzleLibraryListeners() {
     
     // Initialize puzzle list
     renderPuzzleList('all');
+    
+    // Update reset button state
+    updateResetButtonState();
 }
 
 // Initialize a new game
@@ -203,6 +220,153 @@ function renderPuzzleList(filter = 'all') {
     });
 }
 
+// Refresh puzzle library to show updated completion status
+function refreshPuzzleLibrary() {
+    // Always refresh the list, regardless of dropdown state
+    // Get the current filter
+    const activeFilter = document.querySelector('.filter-btn.active');
+    const currentFilter = activeFilter ? activeFilter.dataset.difficulty : 'all';
+    
+    // Re-render the list with current filter
+    renderPuzzleList(currentFilter);
+    
+    console.log('Puzzle library refreshed with filter:', currentFilter);
+}
+
+// Update progress bar based on grid completion
+function updateProgressBar() {
+    if (!App.currentGrid || !App.elements.progressContainer) return;
+    
+    let filledCells = 0;
+    const totalCells = 81;
+    
+    // Count filled cells
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            if (App.currentGrid.cells[row][col].value !== 0) {
+                filledCells++;
+            }
+        }
+    }
+    
+    const percentage = Math.round((filledCells / totalCells) * 100);
+    
+    // Update progress bar
+    App.elements.progressFill.style.width = percentage + '%';
+    App.elements.progressText.textContent = `${percentage}% Complete`;
+    
+    // Show progress container if hidden
+    App.elements.progressContainer.classList.remove('hidden');
+}
+
+function handleResetPuzzle() {
+    if (!App.currentGrid || !App.currentPuzzleId) return;
+    
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to reset this puzzle? All your progress will be lost.');
+    
+    if (confirmed) {
+        // Get the original puzzle
+        const puzzle = PuzzleDatabase.getPuzzleById(App.currentPuzzleId);
+        if (puzzle) {
+            // If this puzzle was completed, remove its completed solution and status
+            const puzzleInfo = PuzzleDatabase.getPuzzleInfo(puzzle);
+            if (puzzleInfo.completed) {
+                PuzzleDatabase.removeCompletedSolution(App.currentPuzzleId);
+                // Also remove completion status
+                const allStatus = PuzzleDatabase.loadCompletionStatus();
+                delete allStatus[App.currentPuzzleId];
+                localStorage.setItem('sudoku_puzzle_status', JSON.stringify(allStatus));
+                console.log('Removed completion status and solution for puzzle:', App.currentPuzzleId);
+            }
+            
+            // Reset game state
+            App.history = [];
+            App.historyIndex = -1;
+            App.selectedCell = null;
+            
+            // Load fresh puzzle from original
+            App.currentGrid = Grid.createEmptyGrid();
+            Grid.loadPuzzle(App.currentGrid, puzzle.board);
+            
+            // Reset mascot stats (timer)
+            Mascot.stats.startTime = Date.now();
+            Mascot.stats.hintsUsed = 0;
+            Mascot.stats.movesMade = 0;
+            
+            // Clear completion animations
+            App.elements.gridContainer.classList.remove('completed');
+
+            // If we're in view-only mode, switch back to editable mode
+            if (App.currentGrid && App.currentGrid.isViewOnly) {
+                resetUIForEditableMode();
+            }
+            
+            // Clear view-only flags
+            App.currentGrid.isViewOnly = false;
+            App.currentGrid.isCompleted = false;
+            
+            // Re-render and update UI
+            Grid.render(App.currentGrid);
+            updateHistoryButtons();
+            updateProgressBar();
+            Grid.clearHighlights();
+            
+            // Refresh puzzle library to update completion status immediately
+            setTimeout(() => {
+                refreshPuzzleLibrary();
+            }, 50);
+            
+            // Close puzzle dropdown
+            closePuzzleDropdown();
+            
+            // Show mascot message
+            Mascot.showMessage('Puzzle reset! Fresh start!');
+        }
+    }
+}
+
+// Update reset button state (enabled/disabled)
+function updateResetButtonState() {
+    if (!App.elements.resetPuzzleBtn) return;
+    
+    const hasActivePuzzle = App.currentGrid && App.currentPuzzleId;
+    App.elements.resetPuzzleBtn.disabled = !hasActivePuzzle;
+}
+
+// Handle individual puzzle reset from library
+function handleIndividualPuzzleReset(puzzleId) {
+    const puzzle = PuzzleDatabase.getPuzzleById(puzzleId);
+    if (!puzzle) return;
+    
+    const confirmed = confirm(`Reset progress for Puzzle #${puzzleId}? This will remove your completion status and best time.`);
+    
+    if (confirmed) {
+        // Remove completion status from localStorage
+        const allStatus = PuzzleDatabase.loadCompletionStatus();
+        delete allStatus[puzzleId];
+        localStorage.setItem('sudoku_puzzle_status', JSON.stringify(allStatus));
+        
+        // Remove the completed solution
+        PuzzleDatabase.removeCompletedSolution(puzzleId);
+        
+        // If this is the currently active puzzle, reset it too
+        if (App.currentPuzzleId === puzzleId) {
+            // Reset the active game
+            loadPuzzleIntoGame(puzzle);
+        }
+        
+        // Refresh the puzzle library to update the UI
+        setTimeout(() => {
+            refreshPuzzleLibrary();
+            console.log('Individual puzzle reset completed for puzzle:', puzzleId);
+        }, 50);
+        
+        // Show confirmation message
+        Mascot.showMessage(`Puzzle #${puzzleId} progress reset!`);
+    }
+}
+
 // Create puzzle item element
 function createPuzzleItem(puzzleInfo) {
     const item = document.createElement('div');
@@ -225,12 +389,30 @@ function createPuzzleItem(puzzleInfo) {
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                 </svg>
                 ${puzzleInfo.bestTime ? `<span class="best-time">${formatTime(puzzleInfo.bestTime)}</span>` : ''}
+                <button class="puzzle-reset-btn" data-puzzle-id="${puzzleInfo.id}" title="Reset progress">🔄</button>
             ` : ''}
         </div>
     `;
     
-    // Add click handler
-    item.addEventListener('click', () => selectPuzzle(puzzleInfo.id));
+    // Add click handler for puzzle selection
+    item.addEventListener('click', (e) => {
+        // Don't select puzzle if reset button was clicked
+        if (e.target.classList.contains('puzzle-reset-btn')) {
+            return;
+        }
+        selectPuzzle(puzzleInfo.id);
+    });
+    
+    // Add reset button handler if puzzle is completed
+    if (puzzleInfo.completed) {
+        const resetBtn = item.querySelector('.puzzle-reset-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent puzzle selection
+                handleIndividualPuzzleReset(puzzleInfo.id);
+            });
+        }
+    }
     
     return item;
 }
@@ -261,22 +443,31 @@ function formatTime(seconds) {
 
 // Select and load a puzzle
 function selectPuzzle(puzzleId) {
-    // Check if current game has progress
+    const puzzle = PuzzleDatabase.getPuzzleById(puzzleId);
+    if (!puzzle) return;
+    
+    // Check if puzzle is completed
+    const puzzleInfo = PuzzleDatabase.getPuzzleInfo(puzzle);
+    
+    if (puzzleInfo.completed) {
+        // Load completed puzzle in view-only mode
+        loadCompletedPuzzle(puzzle, puzzleInfo);
+        closePuzzleDropdown();
+        Mascot.showMessage(`Viewing completed Puzzle #${puzzleId}!`);
+        return;
+    }
+    
+    // For incomplete puzzles, check if current game has progress
     if (hasUnsavedProgress()) {
         if (!confirm('You have an unfinished puzzle. Do you want to start a new one?')) {
             return;
         }
     }
     
-    // Load the selected puzzle
-    const puzzle = PuzzleDatabase.getPuzzleById(puzzleId);
-    if (puzzle) {
-        loadPuzzleIntoGame(puzzle);
-        closePuzzleDropdown();
-        
-        // Show mascot message
-        Mascot.showMessage(`Starting Puzzle #${puzzleId}!`);
-    }
+    // Load the selected puzzle normally
+    loadPuzzleIntoGame(puzzle);
+    closePuzzleDropdown();
+    Mascot.showMessage(`Starting Puzzle #${puzzleId}!`);
 }
 
 // Load puzzle into the game
@@ -305,7 +496,131 @@ function loadPuzzleIntoGame(puzzle) {
     // Update UI
     updateHistoryButtons();
     Grid.clearHighlights();
+
+    // Reset UI for normal (editable) mode
+    resetUIForEditableMode();
+
+    // Update progress bar
+    updateProgressBar();
+
+    // Update reset button state
+    updateResetButtonState();
 }
+
+// Load a completed puzzle in view-only mode
+// Load a completed puzzle in view-only mode
+function loadCompletedPuzzle(puzzle, puzzleInfo) {
+    // Reset game state
+    App.currentGrid = Grid.createEmptyGrid();
+    App.history = [];
+    App.historyIndex = -1;
+    App.selectedCell = null;
+    
+    // Try to load the user's completed solution
+    const completedGrid = PuzzleDatabase.getCompletedSolution(puzzle.id);
+    
+    if (completedGrid) {
+        // Load the user's completed solution
+        App.currentGrid = completedGrid;
+        console.log('Loaded completed solution for puzzle:', puzzle.id);
+    } else {
+        // Fallback: Load original puzzle (shouldn't happen for completed puzzles)
+        Grid.loadPuzzle(App.currentGrid, puzzle.board);
+        console.warn('No completed solution found for puzzle:', puzzle.id, 'Loading original');
+    }
+    
+    // Mark as view-only and completed
+    App.currentGrid.isViewOnly = true;
+    App.currentGrid.isCompleted = true;
+    
+    // Store current puzzle ID
+    App.currentPuzzleId = puzzle.id;
+    
+    // Render the grid with the completed solution
+    Grid.render(App.currentGrid);
+    
+    // Update UI for view-only mode
+    updateUIForViewOnlyMode(puzzleInfo);
+    
+    // Update progress bar (should show 100% for completed)
+    updateProgressBar();
+    
+    // Update reset button state
+    updateResetButtonState();
+    
+    // Clear highlights
+    Grid.clearHighlights();
+}
+
+// Reset UI elements for normal editable mode
+function resetUIForEditableMode() {
+    // Enable number pad buttons
+    App.elements.numberBtns.forEach(btn => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    });
+    
+    // Enable pencil mode
+    App.elements.pencilMode.disabled = false;
+    App.elements.pencilMode.parentElement.style.opacity = '1';
+    
+    // Enable erase button
+    App.elements.eraseBtn.disabled = false;
+    App.elements.eraseBtn.style.opacity = '1';
+    
+    // Remove view-only class from grid
+    App.elements.gridContainer.classList.remove('view-only');
+    
+    // Hide status message
+    if (App.elements.puzzleStatusMessage) {
+        App.elements.puzzleStatusMessage.classList.add('hidden');
+    }
+    
+    // Clear view-only flags
+    if (App.currentGrid) {
+        App.currentGrid.isViewOnly = false;
+        App.currentGrid.isCompleted = false;
+    }
+}
+
+// Update UI elements for view-only mode
+// Update UI elements for view-only mode
+function updateUIForViewOnlyMode(puzzleInfo) {
+    // Disable number pad buttons
+    App.elements.numberBtns.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+    });
+    
+    // Disable pencil mode
+    App.elements.pencilMode.disabled = true;
+    App.elements.pencilMode.parentElement.style.opacity = '0.5';
+    
+    // Disable erase button
+    App.elements.eraseBtn.disabled = true;
+    App.elements.eraseBtn.style.opacity = '0.5';
+    
+    // Add view-only class to grid
+    App.elements.gridContainer.classList.add('view-only');
+    
+    // Show status message
+    if (App.elements.puzzleStatusMessage) {
+        App.elements.statusText.textContent = 'Puzzle Complete!';
+        if (puzzleInfo.bestTime) {
+            App.elements.statusSubtext.textContent = `Completed in ${formatTime(puzzleInfo.bestTime)} • Reset to play again`;
+        } else {
+            App.elements.statusSubtext.textContent = 'Reset to play again';
+        }
+        App.elements.puzzleStatusMessage.classList.remove('hidden');
+    }
+    
+    // Show completion message
+    if (puzzleInfo.bestTime) {
+        Mascot.showMessage(`Viewing completed puzzle! Time: ${formatTime(puzzleInfo.bestTime)}`, 4000);
+    }
+}
+
+
 
 // Check if there's unsaved progress
 function hasUnsavedProgress() {
@@ -473,6 +788,9 @@ function placeNumber(number) {
     
     // Re-render the grid
     Grid.render(App.currentGrid);
+
+    // Update progress bar
+    updateProgressBar();
 }
 
 function handleErase() {
@@ -519,6 +837,9 @@ function handleErase() {
     
     // Re-render to update conflict displays
     Grid.render(App.currentGrid);
+
+    // Update progress bar
+    updateProgressBar();
 }
 
 // New action-based history management
@@ -769,19 +1090,30 @@ function handlePuzzleComplete() {
     // Calculate completion time
     const completionTime = Math.floor((Date.now() - Mascot.stats.startTime) / 1000);
     
-    // Save completion status if we have a puzzle ID
-    if (App.currentPuzzleId) {
-        const currentStatus = PuzzleDatabase.loadCompletionStatus()[App.currentPuzzleId] || {};
-        const newStatus = {
-            completed: true,
-            bestTime: currentStatus.bestTime 
-                ? Math.min(currentStatus.bestTime, completionTime) 
-                : completionTime,
-            lastCompleted: Date.now()
-        };
-        
-        PuzzleDatabase.saveCompletionStatus(App.currentPuzzleId, newStatus);
-    }
+        // Save completion status if we have a puzzle ID
+        if (App.currentPuzzleId) {
+            const currentStatus = PuzzleDatabase.loadCompletionStatus()[App.currentPuzzleId] || {};
+            const newStatus = {
+                completed: true,
+                bestTime: currentStatus.bestTime 
+                    ? Math.min(currentStatus.bestTime, completionTime) 
+                    : completionTime,
+                lastCompleted: Date.now()
+            };
+            
+            // Save completion status
+            PuzzleDatabase.saveCompletionStatus(App.currentPuzzleId, newStatus);
+            
+            // Save the completed grid solution
+            PuzzleDatabase.saveCompletedSolution(App.currentPuzzleId, App.currentGrid);
+            
+            // Refresh puzzle library to show completion status immediately
+            // Use setTimeout to ensure the save operation completes first
+            setTimeout(() => {
+                refreshPuzzleLibrary();
+                console.log('Completion status and solution saved for puzzle:', App.currentPuzzleId);
+            }, 100);
+        }
     
     // Add completion animation
     App.elements.gridContainer.classList.add('completed');

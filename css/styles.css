@@ -371,6 +371,90 @@ body {
     animation: pulseHint 2s ease-in-out infinite;
 }
 
+/* Puzzle status message */
+.puzzle-status-message {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, var(--accent-success), #45B7A8);
+    color: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+}
+
+.puzzle-status-message.hidden {
+    display: none;
+}
+
+.status-icon {
+    font-size: 1.5rem;
+    margin-right: var(--spacing-sm);
+}
+
+.status-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: var(--spacing-xs);
+}
+
+.status-subtext {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    display: block;
+}
+
+/* View-only mode styles */
+.sudoku-grid.view-only .sudoku-cell {
+    cursor: default;
+    background: var(--bg-primary) !important;
+}
+
+.sudoku-grid.view-only .sudoku-cell:hover {
+    transform: none;
+    background: var(--bg-primary) !important;
+}
+
+.sudoku-grid.view-only .sudoku-cell.given {
+    background: #E8F5E9 !important;
+    color: var(--accent-success);
+    font-weight: 700;
+}
+
+.sudoku-grid.view-only .sudoku-cell.user-input {
+    background: #E3F2FD !important;
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+/* Completed puzzle overlay */
+.puzzle-completed-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(39, 174, 96, 0.1);
+    border: 3px solid var(--accent-success);
+    border-radius: 16px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.puzzle-completed-overlay::after {
+    content: '✓ COMPLETED';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--accent-success);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
 /* Pencil marks grid */
 .pencil-marks {
     display: grid;
@@ -449,7 +533,7 @@ body {
 /* ===== Hint Panel (Non-blocking) ===== */
 .hint-panel {
     position: absolute;
-    left: 150px;
+    left: 70px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
@@ -706,6 +790,40 @@ body {
     padding: var(--spacing-sm);
 }
 
+/* Reset button styling - NEW ADDITION */
+.reset-puzzle-btn {
+    margin-top: var(--spacing-md);
+    width: 100%;
+    font-size: 0.9rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-primary);
+    border: 2px solid var(--border-medium);
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.reset-puzzle-btn:hover {
+    background: var(--accent-error);
+    border-color: var(--accent-error);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.reset-puzzle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-primary);
+    border-color: var(--border-light);
+    color: var(--text-secondary);
+}
+
+.reset-puzzle-btn:disabled:hover {
+    transform: none;
+    background: var(--bg-primary);
+    border-color: var(--border-light);
+    color: var(--text-secondary);
+}
+
 .puzzle-item {
     display: flex;
     align-items: center;
@@ -766,6 +884,44 @@ body {
     color: var(--text-secondary);
 }
 
+/* Individual puzzle reset button */
+.puzzle-reset-btn {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+    margin-left: var(--spacing-xs);
+}
+
+.puzzle-reset-btn:hover {
+    opacity: 1;
+    background: var(--accent-error);
+    transform: scale(1.1);
+}
+
+.puzzle-reset-btn:active {
+    transform: scale(0.95);
+}
+
+/* Ensure reset button doesn't interfere with puzzle item hover */
+.puzzle-item:hover .puzzle-reset-btn {
+    opacity: 0.8;
+}
+
+.puzzle-reset-btn:hover {
+    opacity: 1 !important;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    fill: #4CAF50;
+}
+
 .checkmark {
     width: 18px;
     height: 18px;
@@ -805,4 +961,62 @@ body {
     .puzzle-library-container {
         margin-top: var(--spacing-md);
     }
+}
+
+/* ===== Progress Bar ===== */
+.progress-container {
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--border-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-xs);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-success));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-align: center;
+    display: block;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Hide progress bar initially */
+.progress-container.hidden {
+    display: none;
 }
