@@ -308,18 +308,18 @@ body {
     border: 3px solid var(--border-dark);
     border-radius: 8px;
     overflow: hidden;
-    width: 540px;
-    height: 540px;
+    width: 450px;  /* Reduced from 540px */
+    height: 450px; /* Reduced from 540px */
 }
 
 .sudoku-cell {
-    width: 60px;
-    height: 60px;
+    width: 50px;   /* Reduced from 60px */
+    height: 50px;  /* Reduced from 60px */
     border: 1px solid var(--border-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.3rem;  /* Reduced from 1.5rem */
     font-weight: 600;
     cursor: pointer;
     background: var(--bg-secondary);
@@ -633,16 +633,18 @@ body {
 }
 
 /* ===== Responsive Design ===== */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {  /* Changed from 1200px */
     .game-area {
         position: relative;
-      }
+    }
     
     .hint-panel {
-        order: 0; /* Reset order */
+        position: static;
+        transform: none;
         width: 100%;
         max-width: 600px;
         margin: 0 auto var(--spacing-lg);
+        order: -1;
     }
 }
 
@@ -661,13 +663,13 @@ body {
     }
     
     .sudoku-grid {
-        width: 360px;
-        height: 360px;
+        width: 400px;   /* Even smaller for medium screens */
+        height: 400px;
     }
     
     .sudoku-cell {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
         font-size: 1.2rem;
     }
     
