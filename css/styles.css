@@ -78,6 +78,34 @@ body {
     font-weight: 400;
 }
 
+/* Current Puzzle Indicator */
+.current-puzzle-indicator {
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+}
+
+.current-puzzle-indicator .puzzle-label {
+    font-weight: 400;
+}
+
+.current-puzzle-indicator .puzzle-number {
+    font-weight: 600;
+    color: var(--accent-primary);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+}
+
+/* Hide indicator when no puzzle is loaded */
+.current-puzzle-indicator.hidden {
+    display: none;
+}
+
 /* ===== Controls Bar ===== */
 .controls-bar {
     display: flex;
