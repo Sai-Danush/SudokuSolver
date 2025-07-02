@@ -131,6 +131,12 @@ function setupEventListeners() {
     setupPuzzleLibraryListeners();
 }
 
+const originalRender = Grid.render;
+Grid.render = function(grid) {
+    originalRender.call(this, grid);
+    updateButtonStates();
+};
+
 // Setup puzzle library event listeners
 function setupPuzzleLibraryListeners() {
     // Toggle dropdown
@@ -660,6 +666,7 @@ function handleCellClick(row, col) {
     
     // Highlight related cells (same row, column, and box)
     Grid.highlightRelatedCells(row, col);
+    updateButtonStates();
 }
 
 function handleNumberClick(e) {
@@ -791,6 +798,7 @@ function placeNumber(number) {
 
     // Update progress bar
     updateProgressBar();
+    updateButtonStates();
 }
 
 function handleErase() {
@@ -840,6 +848,7 @@ function handleErase() {
 
     // Update progress bar
     updateProgressBar();
+    updateButtonStates();
 }
 
 // New action-based history management
@@ -860,7 +869,7 @@ function saveAction(action) {
     updateHistoryButtons();
     
     // Save current grid state to localStorage
-    Storage.saveGame(App.currentGrid);
+    Storage.saveGame(App.currentGrid, App.currentPuzzleId);
 }
 
 function handleUndo() {
@@ -973,6 +982,26 @@ function updateHistoryButtons() {
     App.elements.undoBtn.disabled = App.historyIndex < 0;
     App.elements.redoBtn.disabled = App.historyIndex >= App.history.length - 1;
 }
+
+function updateButtonStates() {
+    // Undo/Redo buttons (already handled by updateHistoryButtons)
+    
+    // Erase button
+    if (App.selectedCell) {
+        const cell = App.currentGrid.cells[App.selectedCell.row][App.selectedCell.col];
+        const hasContent = cell.value !== 0 || cell.pencilMarks.size > 0;
+        App.elements.eraseBtn.disabled = cell.isGiven || !hasContent || App.currentGrid.isViewOnly;
+    } else {
+        App.elements.eraseBtn.disabled = true;
+    }
+    
+    // Hint button in view-only mode
+    App.elements.hintBtn.disabled = App.currentGrid?.isViewOnly || false;
+    
+    // Number buttons and pencil mode in view-only mode are already handled
+}
+
+
 
 function handleHintRequest() {
     // Add mascot reaction
@@ -1127,30 +1156,44 @@ function loadSavedGame() {
     const savedData = Storage.loadGame();
     if (savedData) {
         App.currentGrid = savedData.grid;
+        App.currentPuzzleId = savedData.puzzleId; // Add this line
         
         // Clear history when loading saved game
         App.history = [];
         App.historyIndex = -1;
         
+        // Check if this is a completed puzzle and handle view-only mode
+        if (App.currentPuzzleId) {
+            const puzzle = PuzzleDatabase.getPuzzleById(App.currentPuzzleId);
+            if (puzzle) {
+                const puzzleInfo = PuzzleDatabase.getPuzzleInfo(puzzle);
+                if (puzzleInfo.completed) {
+                    App.currentGrid.isViewOnly = true;
+                    App.currentGrid.isCompleted = true;
+                    updateUIForViewOnlyMode(puzzleInfo);
+                }
+            }
+        }
+        
         Grid.render(App.currentGrid);
         updateHistoryButtons();
+        updateProgressBar(); // Add this
+        updateResetButtonState(); // Add this
     }
     
-    // Load theme preference
+    // Load theme preference (rest of the function stays the same)
     const savedTheme = Storage.loadThemePreference();
     if (savedTheme !== 'default') {
         App.currentTheme = savedTheme;
-        // Create a fake event object for handleThemeChange
         const fakeEvent = { 
             currentTarget: { 
                 dataset: { theme: savedTheme } 
             },
-            stopPropagation: () => {} // Add this to prevent errors
+            stopPropagation: () => {}
         };
         handleThemeChange(fakeEvent);
     }
     
-    // Update active theme button
     App.elements.themeOptions.forEach(option => {
         option.classList.toggle('active', option.dataset.theme === App.currentTheme);
     });

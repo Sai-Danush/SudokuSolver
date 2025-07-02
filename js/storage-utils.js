@@ -11,10 +11,11 @@ const Storage = {
     },
     
     // Save current game state
-    saveGame(grid) {
+    saveGame(grid, puzzleId = null) {
         try {
             const gameData = {
                 grid: this.serializeGrid(grid),
+                puzzleId: puzzleId,
                 timestamp: Date.now(),
                 version: '1.0'
             };
@@ -43,6 +44,7 @@ const Storage = {
             
             return {
                 grid: this.deserializeGrid(gameData.grid),
+                puzzleId: gameData.puzzleId || null,
                 timestamp: gameData.timestamp
             };
         } catch (error) {
