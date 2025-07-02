@@ -84,7 +84,10 @@ function cacheElements() {
         // Status message
         puzzleStatusMessage: document.getElementById('puzzleStatusMessage'),
         statusText: document.getElementById('statusText'),
-        statusSubtext: document.getElementById('statusSubtext')
+        statusSubtext: document.getElementById('statusSubtext'),
+
+        currentPuzzleIndicator: document.getElementById('currentPuzzleIndicator'),
+        currentPuzzleNumber: document.getElementById('currentPuzzleNumber')
     };
 }
 
@@ -325,6 +328,8 @@ function handleResetPuzzle() {
             
             // Close puzzle dropdown
             closePuzzleDropdown();
+
+            updatePuzzleIndicator();
             
             // Show mascot message
             Mascot.showMessage('Puzzle reset! Fresh start!');
@@ -511,6 +516,8 @@ function loadPuzzleIntoGame(puzzle) {
 
     // Update reset button state
     updateResetButtonState();
+
+    updatePuzzleIndicator();
 }
 
 // Load a completed puzzle in view-only mode
@@ -553,6 +560,8 @@ function loadCompletedPuzzle(puzzle, puzzleInfo) {
     
     // Update reset button state
     updateResetButtonState();
+
+    updatePuzzleIndicator();
     
     // Clear highlights
     Grid.clearHighlights();
@@ -1001,6 +1010,15 @@ function updateButtonStates() {
     // Number buttons and pencil mode in view-only mode are already handled
 }
 
+function updatePuzzleIndicator() {
+    if (App.currentPuzzleId && App.elements.currentPuzzleIndicator) {
+        App.elements.currentPuzzleNumber.textContent = `Puzzle #${App.currentPuzzleId}`;
+        App.elements.currentPuzzleIndicator.classList.remove('hidden');
+    } else {
+        App.elements.currentPuzzleIndicator?.classList.add('hidden');
+    }
+}
+
 
 
 function handleHintRequest() {
@@ -1179,6 +1197,7 @@ function loadSavedGame() {
         updateHistoryButtons();
         updateProgressBar(); // Add this
         updateResetButtonState(); // Add this
+        updatePuzzleIndicator(); // Add this
     }
     
     // Load theme preference (rest of the function stays the same)
